@@ -431,3 +431,32 @@ def test_openapi_can_render_api_key_security_schemes_correctly():
             },
         },
     }
+
+
+def test_openapi_includes_route_params_in_include_prefixes():
+
+    # Given I've got some routes with parameters defined in prefixes
+    routes = [
+        Include('/api/{flavour}', routes=[
+            Route('/', list_pets, method='GET'),
+            Route('/{id}', delete_pet, method='DELETE')
+        ])
+    ]
+
+    # When I generate a document with those routes
+    document = generate_openapi_document(
+        App(routes=routes),
+        Metadata(
+            "example",
+            "an example",
+            "0.0.0"
+        ),
+        security_schemes=[]
+    )
+
+    # Then the parameters for each child route include parameters from the prefixed route
+    assert document['paths']['/api/{flavour}/']['get']['parameters'][0]['name'] == 'flavour'
+
+    param_names = list(map(lambda x: x['name'], document['paths']['/api/{flavour}/{id}']['delete']['parameters']))
+
+    assert 'flavour' in param_names and 'id' in param_names

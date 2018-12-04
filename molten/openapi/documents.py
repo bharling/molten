@@ -177,6 +177,10 @@ def generate_openapi_document(
             request_schema_name = None
             annotations = get_type_hints(handler)
             route_template_parameters = get_route_parameters(route.template)
+
+            for item in route_template_parameters:
+                parameters.append(Parameter(item, 'path', required=True))
+
             for name, annotation in annotations.items():
                 if name == "return":
                     continue
